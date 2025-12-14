@@ -18,7 +18,7 @@ typedef enum Sere_LogLevel
     SERE_LOG_LEVEL_ERROR = 1,
     SERE_LOG_LEVEL_WARN = 2,
     SERE_LOG_LEVEL_INFO = 3,
-    SERE_LOG_LEVEL_DEGUG = 4,
+    SERE_LOG_LEVEL_DEBUG = 4,
     SERE_LOG_LEVEL_TRACE = 5,
 } Sere_LogLevel;
 

@@ -10,10 +10,15 @@ typedef struct Sere_App {
     i16 start_width;
     i16 start_height;
 
-    char* name;
+    i16 width;
+    i16 height;
+
+    char* title;
 } Sere_App;
 
-SERE b8 Sere_CreateApp();
+SERE b8 Sere_Init();
+
+SERE Sere_App* Sere_CreateApp(const char* title, i32 width, i32 height);
 
 SERE b8 Sere_RunApp();
 

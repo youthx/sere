@@ -16,7 +16,6 @@ typedef struct Sere_InternalState
 static f64 clock_freq;
 static LARGE_INTEGER start_time;
 
-
 LRESULT CALLBACK Sere_Win32ProcessMessage(HWND hwnd, u32 msg, WPARAM w_param, LPARAM l_param);
 
 b8 Sere_PlatformStartup(
@@ -123,6 +122,10 @@ b8 Sere_PlatformPumpMessages(Sere_PlatformState *state)
     MSG msg;
     while (PeekMessageA(&msg, NULL, 0, 0, PM_REMOVE))
     {
+        if (msg.message == WM_QUIT)
+        {
+            return SERE_FALSE; // signal to exit
+        }
         TranslateMessage(&msg);
         DispatchMessageA(&msg);
     }
@@ -149,7 +152,7 @@ void *Sere_PlatformCopyMemory(void *dest, const void *source, u64 size)
     return memcpy(dest, source, size);
 }
 
-void *Sere_PlatformSetMemory(void *dest, i32 value, u64 size) 
+void *Sere_PlatformSetMemory(void *dest, i32 value, u64 size)
 {
     return memset(dest, value, size);
 }
@@ -164,7 +167,6 @@ void Sere_PlatformConsoleWrite(const char *message, u8 color)
     u64 length = strlen(message);
     LPDWORD num_written = 0;
     WriteConsoleA(console_handle, message, (DWORD)length, num_written, 0);
-
 }
 
 void Sere_PlatformConsoleWriteError(const char *message, u8 color)
@@ -177,75 +179,96 @@ void Sere_PlatformConsoleWriteError(const char *message, u8 color)
     u64 length = strlen(message);
     LPDWORD num_written = 0;
     WriteConsoleA(console_handle, message, (DWORD)length, num_written, 0);
-
 }
 
-f64 Sere_PlatformGetAbsoluteTime() 
+SERE i32 Sere_GetScreenWidth()
+{
+    return (i32)GetSystemMetrics(SM_CXSCREEN);
+}
+
+SERE i32 Sere_GetScreenHeight()
+{
+    return (i32)GetSystemMetrics(SM_CYSCREEN);
+}
+
+f64 Sere_PlatformGetAbsoluteTime()
 {
     LARGE_INTEGER now_time;
     QueryPerformanceCounter(&now_time);
     return (f64)now_time.QuadPart * clock_freq;
 }
 
-void Sere_PlatformSleep(u64 ms) 
+void Sere_PlatformSleep(u64 ms)
 {
     Sleep(ms);
 }
 
-LRESULT CALLBACK Sere_Win32ProcessMessage(HWND hwnd, u32 msg, WPARAM w_param, LPARAM l_param) 
+LRESULT CALLBACK Sere_Win32ProcessMessage(HWND hwnd, u32 msg, WPARAM w_param, LPARAM l_param)
 {
-    switch (msg) {
-        case WM_ERASEBKGND: // Notify the OS that erasing is handled by app to prevent flicker
-            return 1;
-        
-        case WM_CLOSE: 
-            // TODO: Fire an event for the application to quit
-            return 0;
+    switch (msg)
+    {
+    case WM_ERASEBKGND: // Notify the OS that erasing is handled by app to prevent flicker
+        return 1;
 
-        case WM_DESTROY:
-            PostQuitMessage(0);
-            return 0;
-        
-        case WM_SIZE: {
-            RECT r;
-            GetClientRect(hwnd, &r);
-            u32 width = r.right - r.left;
-            u32 height = r.bottom - r.top;
+    case WM_CLOSE:
+        DestroyWindow(hwnd);
+        return 0;
 
-            // TODO: Fire an event for window resize
-        } break;
+    case WM_DESTROY:
+        PostQuitMessage(0);
+        return 0;
 
-        case WM_KEYDOWN:
-        case WM_SYSKEYDOWN:
-        case WM_KEYUP:
-        case WM_SYSKEYUP: {
-            b8 pressed = (msg == WM_KEYDOWN || msg == WM_SYSKEYDOWN);
+    case WM_SIZE:
+    {
+        RECT r;
+        GetClientRect(hwnd, &r);
+        u32 width = r.right - r.left;
+        u32 height = r.bottom - r.top;
+
+        // TODO: Fire an event for window resize
+    }
+    break;
+
+    case WM_KEYDOWN:
+    case WM_SYSKEYDOWN:
+    case WM_KEYUP:
+    case WM_SYSKEYUP:
+    {
+        b8 pressed = (msg == WM_KEYDOWN || msg == WM_SYSKEYDOWN);
+        // TODO: input processing
+    }
+    break;
+
+    case WM_MOUSEMOVE:
+    {
+        i32 x_pos = GET_X_LPARAM(l_param);
+        i32 y_pos = GET_Y_LPARAM(l_param);
+        // TODO: input processing
+    }
+    break;
+
+    case WM_MOUSEWHEEL:
+    {
+        i32 z_delta = GET_WHEEL_DELTA_WPARAM(w_param);
+        if (z_delta != 0)
+        {
+            z_delta - (z_delta < 0) ? -1 : 1;
             // TODO: input processing
-        } break;
+        }
+    }
+    break;
 
-        case WM_MOUSEMOVE: {
-            i32 x_pos = GET_X_LPARAM(l_param);
-            i32 y_pos = GET_Y_LPARAM(l_param);
-            // TODO: input processing
-        } break;
-
-        case WM_MOUSEWHEEL: {
-            i32 z_delta = GET_WHEEL_DELTA_WPARAM(w_param);
-            if (z_delta != 0) {
-                z_delta - (z_delta < 0) ? -1 : 1;
-                // TODO: input processing
-            }
-        } break;
-
-        case WM_LBUTTONDOWN:
-        case WM_MBUTTONDOWN:
-        case WM_RBUTTONDOWN:
-        case WM_LBUTTONUP:
-        case WM_MBUTTONUP:
-        case WM_RBUTTONUP: {
-            b8 pressed = (msg == WM_LBUTTONDOWN || msg == WM_MBUTTONDOWN || msg == WM_RBUTTONDOWN);
-            // TODO: input processing
-        } break;
+    case WM_LBUTTONDOWN:
+    case WM_MBUTTONDOWN:
+    case WM_RBUTTONDOWN:
+    case WM_LBUTTONUP:
+    case WM_MBUTTONUP:
+    case WM_RBUTTONUP:
+    {
+        b8 pressed = (msg == WM_LBUTTONDOWN || msg == WM_MBUTTONDOWN || msg == WM_RBUTTONDOWN);
+        // TODO: input processing
+    }
+    break;
     }
 
     return DefWindowProcA(hwnd, msg, w_param, l_param);

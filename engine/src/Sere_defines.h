@@ -44,8 +44,13 @@ STATIC_ASSERT(sizeof(f64) == 8, "Expected f64 to be 8 bytes.");
 #define TRUE 1
 #define FALSE 0
 
-#define SERE_TRUE TRUE 
-#define SERE_FALSE FALSE 
+#define SERE_RESULT b8
+
+#define SERE_TRUE TRUE
+#define SERE_FALSE FALSE
+
+#define SERE_OK TRUE 
+#define SERE_ERR FALSE 
 
 // Platform detection
 #if defined(WIN32) || defined(_WIN32) || defined(__WIN32__)
