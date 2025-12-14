@@ -29,8 +29,8 @@ SERE void* Sere_PlatformSetMemory(void* dest, i32 value, u64 size);
 SERE void Sere_PlatformConsoleWrite(const char* message, u8 color);
 SERE void Sere_PlatformConsoleWriteError(const char* message, u8 color);
 
-SERE i32 Sere_GetScreenWidth();
-SERE i32 Sere_GetScreenHeight();
+SERE i32 Sere_GetMonitorWidth();
+SERE i32 Sere_GetMonitorHeight();
 
 SERE f64 Sere_PlatformGetAbsoluteTime();
 

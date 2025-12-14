@@ -2,6 +2,8 @@
 #include "platform/Sere_platform.h"
 #include "core/Sere_logger.h"
 
+#include "core/Sere_memory.h"
+
 #if KPLATFORM_WINDOWS
 
 #include <windows.h>
@@ -26,7 +28,8 @@ b8 Sere_PlatformStartup(
     i32 width,
     i32 height)
 {
-    state->internal_state = malloc(sizeof(Sere_InternalState));
+    state->internal_state = Sere_Alloc(sizeof(Sere_InternalState), SERE_MEMORY_TAG_PLATFORM);
+
     Sere_InternalState *internal_state = (Sere_InternalState *)state->internal_state;
 
     internal_state->h_instance = GetModuleHandleA(0);
@@ -181,12 +184,12 @@ void Sere_PlatformConsoleWriteError(const char *message, u8 color)
     WriteConsoleA(console_handle, message, (DWORD)length, num_written, 0);
 }
 
-SERE i32 Sere_GetScreenWidth()
+SERE i32 Sere_GetMonitorWidth()
 {
     return (i32)GetSystemMetrics(SM_CXSCREEN);
 }
 
-SERE i32 Sere_GetScreenHeight()
+SERE i32 Sere_GetMonitorHeight()
 {
     return (i32)GetSystemMetrics(SM_CYSCREEN);
 }

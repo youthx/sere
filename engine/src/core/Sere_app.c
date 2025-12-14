@@ -7,6 +7,7 @@
 
 #include "Sere_types.h"
 #include "Sere_system.h"
+#include "Sere_memory.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -34,20 +35,27 @@ b8 Sere_SetSystem(Sere_System *system)
 {
     app_state.system = system;
     app_state.system->state = Sere_PlatformAlloc(sizeof(Sere_SystemState), SERE_FALSE);
-    
+
     return app_state.system != NULL;
 }
 
 b8 Sere_Init()
 {
 
+    Sere_InitMemory();
     Sere_InitLogging();
 
     #ifndef SERE_SILENT
-    printf("sere %s\nHello from the Sere commmunity.", SERE_VERSION);
+    printf("sere %s\nHello from the Sere commmunity.\n", SERE_VERSION);
     #endif 
 
     sere_initialized = SERE_TRUE;
+}
+
+void Sere_Quit() {
+    app_state.is_running = SERE_FALSE;
+    Sere_PlatformShutdown(&app_state.platform);
+    Sere_ShutdownMemory();
 }
 
 Sere_App *Sere_CreateApp(const char *title, i32 width, i32 height)
@@ -64,11 +72,11 @@ Sere_App *Sere_CreateApp(const char *title, i32 width, i32 height)
         return NULL;
     }
 
-    i32 x = (Sere_GetScreenWidth() - width) / 2;
-    i32 y = (Sere_GetScreenHeight() - height) / 2;
+    i32 x = (Sere_GetMonitorWidth() - width) / 2;
+    i32 y = (Sere_GetMonitorHeight() - height) / 2;
 
     Sere_App *app = (Sere_App *)Sere_PlatformAlloc(sizeof(Sere_App), SERE_FALSE);
-    app->title = malloc(strlen(title));
+    app->title = Sere_Alloc(strlen(title), SERE_MEMORY_TAG_STRING);
     strcpy(app->title, title);
 
     app->start_pos_x = x;
@@ -88,6 +96,8 @@ Sere_App *Sere_CreateApp(const char *title, i32 width, i32 height)
     }
 
     
+    app_state.system->state = Sere_Alloc(sizeof(Sere_SystemState), SERE_MEMORY_TAG_SYSTEM);
+
     if (!app_state.system->init(app_state.system))
     {
         SERE_FATAL("App failed to initialize.");
@@ -95,13 +105,14 @@ Sere_App *Sere_CreateApp(const char *title, i32 width, i32 height)
     }
   
     app_state.system->on_resize(app_state.system, app_state.width, app_state.height);
-
+    
     initialized = SERE_TRUE;
     return app;
 }
 
 b8 Sere_RunApp()
 {
+    SERE_INFO(Sere_GetMemoryUsageString());
     while (app_state.is_running)
     {
         if (!Sere_PlatformPumpMessages(&app_state.platform))
@@ -126,8 +137,7 @@ b8 Sere_RunApp()
         }
     }
 
-    app_state.is_running = SERE_FALSE;
-    Sere_PlatformShutdown(&app_state.platform);
+    Sere_Quit();
 
     return SERE_TRUE;
 }

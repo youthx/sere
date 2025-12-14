@@ -18,6 +18,8 @@ typedef struct Sere_App {
 
 SERE b8 Sere_Init();
 
+SERE void Sere_Quit();
+
 SERE Sere_App* Sere_CreateApp(const char* title, i32 width, i32 height);
 
 SERE b8 Sere_RunApp();
