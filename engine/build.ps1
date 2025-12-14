@@ -3,7 +3,7 @@ $ErrorActionPreference = "Stop"
 
 # Settings
 $assembly = "engine"
-$compilerFlags = @("-g","-shared","-Wvarargs","-Wall","-Werror")
+$compilerFlags = @("-g","-shared","-Wvarargs")
 $includeFlags = @("-Isrc", "-II:/Vulkan/Include")
 $linkerFlags  = @("-luser32", "-lvulkan-1", "-LI:/Vulkan/Lib")
 $defines = @("-D_DEBUG","-DKEXPORT","-D_CRT_SECURE_NO_WARNINGS")

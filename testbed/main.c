@@ -1,7 +1,6 @@
 
-#include <test.h>
+#include <Sere.h>
 
-int main() {
-    print_int(3);
-    return 0;
+int main(void) {
+
 }

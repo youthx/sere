@@ -44,6 +44,9 @@ STATIC_ASSERT(sizeof(f64) == 8, "Expected f64 to be 8 bytes.");
 #define TRUE 1
 #define FALSE 0
 
+#define SERE_TRUE TRUE 
+#define SERE_FALSE FALSE 
+
 // Platform detection
 #if defined(WIN32) || defined(_WIN32) || defined(__WIN32__)
 #define KPLATFORM_WINDOWS 1
