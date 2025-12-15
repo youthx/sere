@@ -22,8 +22,11 @@ typedef enum Sere_LogLevel
     SERE_LOG_LEVEL_TRACE = 5,
 } Sere_LogLevel;
 
-b8 Sere_InitLogging();
-void Sere_ShutdownLogging();
+SERE b8 Sere_InitLogging();
+
+SERE b8 Sere_LoggingInitialized();
+
+SERE void Sere_ShutdownLogging();
 
 SERE void Sere_LogOutput(Sere_LogLevel level, const char *message, ...);
 

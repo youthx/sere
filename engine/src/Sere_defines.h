@@ -27,6 +27,19 @@ typedef char b8;
 #define STATIC_ASSERT static_assert
 #endif
 
+#if defined(_MSC_VER)
+/* MSVC */
+#define SERE_WEAK
+#define SERE_ALIAS(sym, target) \
+    __pragma(comment(linker, "/alternatename:" #sym "=" #target))
+
+#else
+/* Clang / GCC */
+#define SERE_WEAK __attribute__((weak))
+#define SERE_ALIAS(sym, target)
+
+#endif
+
 // Ensure all types are of the correct size.
 STATIC_ASSERT(sizeof(u8) == 1, "Expected u8 to be 1 byte.");
 STATIC_ASSERT(sizeof(u16) == 2, "Expected u16 to be 2 bytes.");
@@ -49,8 +62,8 @@ STATIC_ASSERT(sizeof(f64) == 8, "Expected f64 to be 8 bytes.");
 #define SERE_TRUE TRUE
 #define SERE_FALSE FALSE
 
-#define SERE_OK TRUE 
-#define SERE_ERR FALSE 
+#define SERE_OK TRUE
+#define SERE_ERR FALSE
 
 // Platform detection
 #if defined(WIN32) || defined(_WIN32) || defined(__WIN32__)

@@ -28,6 +28,9 @@ typedef enum Sere_MemoryTag
 } Sere_MemoryTag;
 
 SERE void Sere_InitMemory(); 
+
+SERE b8 Sere_MemoryInitialized();
+
 SERE void Sere_ShutdownMemory();
 
 SERE void *Sere_Alloc(u64 size, Sere_MemoryTag tag);

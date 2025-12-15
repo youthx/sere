@@ -37,54 +37,100 @@ void _Sere_ArrayFieldSet(void *array, u64 field, u64 value)
     header[field] = value;
 }
 
-void* _Sere_ArrayResize(void* array) 
+void *_Sere_ArrayResize(void *array)
 {
     u64 len = Sere_ArrayLength(array);
     u64 stride = Sere_ArrayStride(array);
 
-    void* temp = _Sere_CreateArray(
+    void *temp = _Sere_CreateArray(
         (SERE_DARRAY_RESIZE_FACTOR * Sere_ArrayCapacity(array)),
-        stride,
-    );
-    Sere_CopyMemory(temp, SERE_ARRAY_LENGTH, len);
+        stride);
+    Sere_CopyMemory(temp, array, len * stride);
 
-    _Sere_ArrayFieldSet(temp, SERE_ARRAY_LENGTH, length);
+    _Sere_ArrayFieldSet(temp, SERE_ARRAY_LENGTH, len);
     _Sere_DestroyArray(array);
     return temp;
 }
 
-void* _Sere_ArrayPush(void* array, const void* value_ptr) {
+void *_Sere_ArrayPush(void *array, const void *value_ptr)
+{
     u64 len = Sere_ArrayLength(array);
     u64 stride = Sere_ArrayStride(array);
-    if (len >= Sere_ArrayCapacity(array)) {
+    if (len >= Sere_ArrayCapacity(array))
+    {
         array = _Sere_ArrayResize(array);
     }
 
     u64 addr = (u64)array;
     addr += (len * stride);
-    Sere_CopyMemory((void*)addr, value_ptr, stride);
+    Sere_CopyMemory((void *)addr, value_ptr, stride);
     _Sere_ArrayFieldSet(array, SERE_ARRAY_LENGTH, len + 1);
     return array;
 }
 
-void _Sere_ArrayPop(void* array, void* dest) {
+void _Sere_ArrayPop(void *array, void *dest)
+{
     u64 len = Sere_ArrayLength(array);
     u64 stride = Sere_ArrayStride(array);
 
     u64 addr = (u64)array;
     addr += ((len - 1) * stride);
-    Sere_CopyMemory(dest, (void*)addr, stride);
+    Sere_CopyMemory(dest, (void *)addr, stride);
     _Sere_ArrayFieldSet(array, SERE_ARRAY_LENGTH, len - 1);
 }
 
-void* _Sere_ArrayPopAt(void* array, u64 index, void* dest) {
+void *_Sere_ArrayPopAt(void *array, u64 index, void *dest)
+{
     u64 len = Sere_ArrayLength(array);
     u64 stride = Sere_ArrayStride(array);
-    if (index >= length) {
+    if (index >= len)
+    {
         SERE_ERROR("Index outside of bounds of this array. Length: %i, index: %i", len, index);
         return array;
     }
 
     u64 addr = (u64)array;
-    Sere_CopyMemory(dest, (void*)(addr + (index * stride)), stride);
+    Sere_CopyMemory(dest, (void *)(addr + (index * stride)), stride);
+
+    if (index != len - 1)
+    {
+        Sere_CopyMemory(
+            (void *)(addr + (index * stride)),
+            (void *)(addr + ((index + 1) * stride)),
+            stride * (len - index));
+    }
+
+    _Sere_ArrayFieldSet(array, SERE_ARRAY_LENGTH, len - 1);
+    return array;
+}
+
+void *_Sere_ArrayInsertAt(void *array, u64 index, void *value_ptr)
+{
+    u64 len = Sere_ArrayLength(array);
+    u64 stride = Sere_ArrayStride(array);
+    if (index >= len)
+    {
+        SERE_ERROR("Index outside of bounds of this array. Length: %i, index: %i", len, index);
+        return array;
+    }
+
+    if (len >= Sere_ArrayCapacity(array))
+    {
+        array = _Sere_ArrayResize(array);
+    }
+
+    u64 addr = (u64)array;
+
+    if (index != len - 1)
+    {
+        Sere_CopyMemory(
+            (void *)(addr + ((index + 1) * stride)),
+            (void *)(addr + (index * stride)),
+            stride * (len - index));
+    }
+
+    Sere_CopyMemory((void *)(addr + (index * stride)), value_ptr, stride);
+
+    _Sere_ArrayFieldSet(array, SERE_ARRAY_LENGTH, len + 1);
+    return array;
 }

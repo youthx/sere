@@ -35,11 +35,18 @@ static const char *Sere_MemoryTagStrings[SERE_MEMORY_TAG_MAX_TAGS] = {
     "SCENE        "};
 
 static Sere_MemoryStats stats;
+static b8 is_initialized = SERE_FALSE;
 
 SERE void Sere_InitMemory()
 {
     Sere_PlatformZeroMemory(&stats, sizeof(stats));
+    is_initialized = SERE_TRUE;
 }
+
+SERE b8 Sere_MemoryInitialized() {
+    return is_initialized;
+}
+
 
 SERE void Sere_ShutdownMemory()
 {

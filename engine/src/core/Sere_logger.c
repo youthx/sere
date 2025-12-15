@@ -7,10 +7,18 @@
 #include <string.h>
 #include <stdarg.h>
 
+static b8 is_initialized = SERE_FALSE;
+
 b8 Sere_InitLogging()
 {
     // TODO: Create a log file
+    is_initialized = SERE_TRUE;
     return SERE_TRUE;
+}
+
+SERE b8 Sere_LoggingInitialized()
+{
+    return is_initialized;
 }
 
 void Sere_ShutdownLogging()

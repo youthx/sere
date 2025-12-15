@@ -43,7 +43,7 @@ SERE void *_Sere_ArrayInsertAt(void *array, u64 index, void *value_ptr);
     }
 
 #define Sere_ArrayPop(array, value_ptr) \
-    _Sere_arrayPop(array, value_ptr)
+    _Sere_ArrayPop(array, value_ptr)
 
 #define Sere_ArrayInsertAt(array, index, value)           \
     {                                                     \

@@ -1,8 +1,9 @@
 
 #include "platform/Sere_platform.h"
 #include "core/Sere_logger.h"
-
+#include "core/Sere_input.h"
 #include "core/Sere_memory.h"
+#include "core/Sere_clipboard.h"
 
 #if KPLATFORM_WINDOWS
 
@@ -94,6 +95,8 @@ b8 Sere_PlatformStartup(
 
     internal_state->hwnd = handle;
 
+    AddClipboardFormatListener(internal_state->hwnd);
+
     b32 should_activate = 1;
     i32 show_window_command_flags = should_activate ? SW_SHOW : SW_SHOWNOACTIVATE;
 
@@ -112,6 +115,7 @@ LRESULT CALLBACK Sere_Win32ProcessMessage(HWND hwnd, u32 msg, WPARAM w_param, LP
 void Sere_PlatformShutdown(Sere_PlatformState *state)
 {
     Sere_InternalState *internal_state = (Sere_InternalState *)state->internal_state;
+    RemoveClipboardFormatListener(internal_state->hwnd);
 
     if (internal_state->hwnd)
     {
@@ -206,6 +210,14 @@ void Sere_PlatformSleep(u64 ms)
     Sleep(ms);
 }
 
+SERE void Sere_PlatformSetTitle(Sere_PlatformState *state, const char *title) 
+{
+    Sere_InternalState *internal_state = (Sere_InternalState *)state->internal_state;
+    if (internal_state && internal_state->hwnd) {
+        SetWindowTextA(internal_state->hwnd, title);
+    }
+}
+
 LRESULT CALLBACK Sere_Win32ProcessMessage(HWND hwnd, u32 msg, WPARAM w_param, LPARAM l_param)
 {
     switch (msg)
@@ -232,13 +244,33 @@ LRESULT CALLBACK Sere_Win32ProcessMessage(HWND hwnd, u32 msg, WPARAM w_param, LP
     }
     break;
 
+    case WM_CLIPBOARDUPDATE:
+    {
+        if (IsClipboardFormatAvailable(CF_TEXT)) {
+            if (OpenClipboard(hwnd)) {
+                HANDLE hData = GetClipboardData(CF_TEXT);
+                if (hData) {
+                    char* pszText = (char*)GlobalLock(hData);
+                    if (pszText) {
+                        Sere_ClipboardProcessUpdate((const char*)pszText, strlen(pszText));
+                        GlobalUnlock(hData);
+                    }
+                }
+                CloseClipboard();
+            }
+        }
+    }
+    break;
+
     case WM_KEYDOWN:
     case WM_SYSKEYDOWN:
     case WM_KEYUP:
     case WM_SYSKEYUP:
     {
         b8 pressed = (msg == WM_KEYDOWN || msg == WM_SYSKEYDOWN);
-        // TODO: input processing
+        Sere_Keys key = (u16)w_param;
+
+        Sere_InputProcessKey(key, pressed);
     }
     break;
 
@@ -246,7 +278,8 @@ LRESULT CALLBACK Sere_Win32ProcessMessage(HWND hwnd, u32 msg, WPARAM w_param, LP
     {
         i32 x_pos = GET_X_LPARAM(l_param);
         i32 y_pos = GET_Y_LPARAM(l_param);
-        // TODO: input processing
+
+        Sere_InputProcessMouseMove((i16)x_pos, (i16)y_pos);
     }
     break;
 
@@ -255,9 +288,11 @@ LRESULT CALLBACK Sere_Win32ProcessMessage(HWND hwnd, u32 msg, WPARAM w_param, LP
         i32 z_delta = GET_WHEEL_DELTA_WPARAM(w_param);
         if (z_delta != 0)
         {
-            z_delta - (z_delta < 0) ? -1 : 1;
+            z_delta = (z_delta < 0) ? -1 : 1;
             // TODO: input processing
         }
+
+        Sere_InputProcessMouseWheel((i8)z_delta);
     }
     break;
 
@@ -269,7 +304,27 @@ LRESULT CALLBACK Sere_Win32ProcessMessage(HWND hwnd, u32 msg, WPARAM w_param, LP
     case WM_RBUTTONUP:
     {
         b8 pressed = (msg == WM_LBUTTONDOWN || msg == WM_MBUTTONDOWN || msg == WM_RBUTTONDOWN);
-        // TODO: input processing
+        Sere_MouseButtons button = SERE_MAX_MOUSE_BUTTONS;
+        switch (msg)
+        {
+        case WM_LBUTTONDOWN:
+        case WM_LBUTTONUP:
+            button = SERE_MOUSE_BUTTON_LEFT;
+            break;
+        case WM_RBUTTONDOWN:
+        case WM_RBUTTONUP:
+            button = SERE_MOUSE_BUTTON_RIGHT;
+            break;
+        case WM_MBUTTONDOWN:
+        case WM_MBUTTONUP:
+            button = SERE_MOUSE_BUTTON_MIDDLE;
+            break;
+        }
+
+        if (button != SERE_MAX_MOUSE_BUTTONS)
+        {
+            Sere_InputProcessMouseButton(button, pressed);
+        }
     }
     break;
     }
