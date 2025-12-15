@@ -1,9 +1,14 @@
 
 #include "platform/Sere_platform.h"
+
 #include "core/Sere_logger.h"
 #include "core/Sere_input.h"
 #include "core/Sere_memory.h"
 #include "core/Sere_clipboard.h"
+
+#include "renderer/vulkan/Sere_vulkan_platform.h"
+
+#include "containers/Sere_array.h"
 
 #if KPLATFORM_WINDOWS
 
@@ -208,6 +213,12 @@ f64 Sere_PlatformGetAbsoluteTime()
 void Sere_PlatformSleep(u64 ms)
 {
     Sleep(ms);
+}
+
+void Sere_PlatformGetRequiredExtensionNames(const char ***names_array)
+{
+    Sere_ArrayPush(*names_array, &"VK_KHR_win32_surface");
+    
 }
 
 SERE void Sere_PlatformSetTitle(Sere_PlatformState *state, const char *title) 

@@ -1,7 +1,7 @@
 
 #pragma once
 
-#include "Sere_renderer_types.inl"
+#include "Sere_renderer_types.h"
 
 struct Sere_PlatformState;
 

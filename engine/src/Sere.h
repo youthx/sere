@@ -7,7 +7,7 @@
 
 #include "platform/Sere_platform.h"
 
-#include "renderer/Sere_renderer_types.inl"
+#include "renderer/Sere_renderer_types.h"
 
 #include "Sere_entry.h"
 
