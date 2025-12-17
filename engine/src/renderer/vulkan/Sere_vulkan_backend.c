@@ -1,6 +1,8 @@
 #include "Sere_vulkan_backend.h"
 #include "Sere_vulkan_types.h"
 #include "Sere_vulkan_platform.h"
+#include "Sere_vulkan_device.h"
+#include "Sere_vulkan_swapchain.h"
 
 #include "core/Sere_logger.h"
 #include "core/Sere_string.h"
@@ -14,7 +16,9 @@ VKAPI_ATTR VkBool32 VKAPI_CALL Sere_VulkanDebugCallback(
     VkDebugUtilsMessageTypeFlagsEXT message_types,
     const VkDebugUtilsMessengerCallbackDataEXT *callback_data,
     void *user_data);
-    
+
+i32 Sere_FindMemoryIndex(u32 type_filter, u32 property_flags);
+
 b8 Sere_InitVulkanRendererBackend(Sere_RendererBackend *backend,
                                   const char *app_name,
                                   struct Sere_PlatformState *plat_state)
@@ -26,6 +30,7 @@ b8 Sere_InitVulkanRendererBackend(Sere_RendererBackend *backend,
     SERE_DEBUG(" Engine      : Sere Engine v1.0.0");
     SERE_DEBUG("============================================================");
 
+    context.find_memory_index = Sere_FindMemoryIndex;
     context.allocator = 0;
 
     VkApplicationInfo app_info = {VK_STRUCTURE_TYPE_APPLICATION_INFO};
@@ -130,6 +135,23 @@ b8 Sere_InitVulkanRendererBackend(Sere_RendererBackend *backend,
     SERE_DEBUG(" Vulkan debug messenger created.");
 #endif
 
+    SERE_DEBUG(" Creating Vulkan surface...");
+    if (!Sere_PlatformCreateVulkanSurface(plat_state, &context))
+    {
+        SERE_ERROR("Failed to create Vulkan surface.");
+    }
+
+    SERE_DEBUG(" Creating Vulkan device...");
+    if (!Sere_CreateVulkanDevice(&context))
+    {
+        SERE_ERROR("Failed to create vulkan device.");
+        return SERE_FALSE;
+    }
+
+    SERE_DEBUG(" Creating Vulkan swapchain...");
+    context.swapchain = *Sere_CreateVulkanSwapchain(&context, context.framebuffer_width, context.framebuffer_height);
+    
+
     SERE_DEBUG(" Vulkan instance created successfully.");
     SERE_DEBUG("============================================================\n");
     return SERE_TRUE;
@@ -143,12 +165,23 @@ void Sere_VulkanRendererBackendInitialized()
 void Sere_ShutdownVulkanRendererBackend(Sere_RendererBackend *backend)
 {
     SERE_DEBUG(" Shutting down Vulkan Renderer Backend...");
+
+    Sere_DestroyVulkanSwapchain(&context, &context.swapchain);
+    
+    Sere_DestroyVulkanDevice(&context);
+    if (context.surface)
+    {
+        vkDestroySurfaceKHR(context.instance, context.surface, context.allocator);
+        context.surface = VK_NULL_HANDLE;
+    }
+
     if (context.debug_messenger)
     {
         PFN_vkDestroyDebugUtilsMessengerEXT func =
             (PFN_vkDestroyDebugUtilsMessengerEXT)vkGetInstanceProcAddr(context.instance, "vkDestroyDebugUtilsMessengerEXT");
         func(context.instance, context.debug_messenger, context.allocator);
     }
+
     vkDestroyInstance(context.instance, context.allocator);
     SERE_DEBUG(" Vulkan Renderer Backend shutdown complete.");
 }
@@ -199,3 +232,22 @@ VKAPI_ATTR VkBool32 VKAPI_CALL Sere_VulkanDebugCallback(
     }
     return VK_FALSE;
 }
+
+i32 Sere_FindMemoryIndex(u32 type_filter, u32 property_flags)
+{
+    VkPhysicalDeviceMemoryProperties memory_props;
+    vkGetPhysicalDeviceMemoryProperties(context.device.phyiscal_device, &memory_props);
+
+    for (u32 i = 0; i < memory_props.memoryTypeCount; ++i)
+    {
+        if (type_filter & (1 << i) &&
+            (memory_props.memoryTypes[i].propertyFlags & property_flags) == property_flags)
+        {
+            return i;
+        }
+    }
+
+    SERE_WARN("Unable to find suitable memory type!");
+    return -1;
+}
+

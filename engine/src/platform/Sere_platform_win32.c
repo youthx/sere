@@ -15,10 +15,16 @@
 #include <windows.h>
 #include <windowsx.h>
 
+#include <vulkan/vulkan.h>
+#include <vulkan/vulkan_win32.h>
+
+#include "renderer/vulkan/Sere_vulkan_types.h"
+
 typedef struct Sere_InternalState
 {
     HINSTANCE h_instance;
     HWND hwnd;
+    VkSurfaceKHR surface;
 } Sere_InternalState;
 
 static f64 clock_freq;
@@ -218,13 +224,32 @@ void Sere_PlatformSleep(u64 ms)
 void Sere_PlatformGetRequiredExtensionNames(const char ***names_array)
 {
     Sere_ArrayPush(*names_array, &"VK_KHR_win32_surface");
-    
 }
 
-SERE void Sere_PlatformSetTitle(Sere_PlatformState *state, const char *title) 
+b8 Sere_PlatformCreateVulkanSurface(struct Sere_PlatformState *plat_state, struct Sere_VulkanContext *context)
+{
+    Sere_InternalState *internal_state = (Sere_InternalState *)plat_state->internal_state;
+
+    VkWin32SurfaceCreateInfoKHR create_info = {VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR};
+    create_info.hinstance = internal_state->h_instance;
+    create_info.hwnd = internal_state->hwnd;
+
+    VkResult result = vkCreateWin32SurfaceKHR(context->instance, &create_info, context->allocator, &internal_state->surface);
+    if (result != VK_SUCCESS)
+    {
+        SERE_FATAL("Vulkan surface creation failed.");
+        return SERE_FALSE;
+    }
+
+    context->surface = internal_state->surface;
+    return SERE_TRUE;
+}
+
+SERE void Sere_PlatformSetTitle(Sere_PlatformState *state, const char *title)
 {
     Sere_InternalState *internal_state = (Sere_InternalState *)state->internal_state;
-    if (internal_state && internal_state->hwnd) {
+    if (internal_state && internal_state->hwnd)
+    {
         SetWindowTextA(internal_state->hwnd, title);
     }
 }
@@ -257,13 +282,17 @@ LRESULT CALLBACK Sere_Win32ProcessMessage(HWND hwnd, u32 msg, WPARAM w_param, LP
 
     case WM_CLIPBOARDUPDATE:
     {
-        if (IsClipboardFormatAvailable(CF_TEXT)) {
-            if (OpenClipboard(hwnd)) {
+        if (IsClipboardFormatAvailable(CF_TEXT))
+        {
+            if (OpenClipboard(hwnd))
+            {
                 HANDLE hData = GetClipboardData(CF_TEXT);
-                if (hData) {
-                    char* pszText = (char*)GlobalLock(hData);
-                    if (pszText) {
-                        Sere_ClipboardProcessUpdate((const char*)pszText, strlen(pszText));
+                if (hData)
+                {
+                    char *pszText = (char *)GlobalLock(hData);
+                    if (pszText)
+                    {
+                        Sere_ClipboardProcessUpdate((const char *)pszText, strlen(pszText));
                         GlobalUnlock(hData);
                     }
                 }
