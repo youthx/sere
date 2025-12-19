@@ -1,59 +1,60 @@
-[2025-12-19 09:47:12] [DEBUG]: ============================================================
-[2025-12-19 09:47:12] [DEBUG]:  Vulkan Renderer Backend Initialization
-[2025-12-19 09:47:12] [DEBUG]: ------------------------------------------------------------
-[2025-12-19 09:47:12] [DEBUG]:  Application : My App
-[2025-12-19 09:47:12] [DEBUG]:  Engine      : Sere Engine v1.0.0
-[2025-12-19 09:47:12] [DEBUG]: ============================================================
-[2025-12-19 09:47:12] [DEBUG]:  Required Vulkan extensions:
-[2025-12-19 09:47:12] [DEBUG]:    - VK_KHR_surface
-[2025-12-19 09:47:12] [DEBUG]:    - VK_KHR_win32_surface
-[2025-12-19 09:47:12] [DEBUG]:    - VK_EXT_debug_utils
-[2025-12-19 09:47:12] [DEBUG]:  Validation layers enabled. Enumerating available layers...
-[2025-12-19 09:47:12] [DEBUG]:    Checking for layer: VK_LAYER_KHRONOS_validation
-[2025-12-19 09:47:12] [DEBUG]:    -> Found
-[2025-12-19 09:47:12] [DEBUG]:  All required validation layers are present.
-[2025-12-19 09:47:12] [DEBUG]:  Creating Vulkan instance...
-[2025-12-19 09:47:12] [DEBUG]:  Creating Vulkan debug messenger...
-[2025-12-19 09:47:12] [DEBUG]:  Vulkan debug messenger created.
-[2025-12-19 09:47:12] [DEBUG]:  Creating Vulkan surface...
-[2025-12-19 09:47:12] [DEBUG]:  Creating Vulkan device...
-[2025-12-19 09:47:12] [INFO]: Graphics | Present | Compute | Transfer | Name
-[2025-12-19 09:47:12] [INFO]:      1 |        1 |        1 |        1 | Intel(R) UHD Graphics
-[2025-12-19 09:47:12] [INFO]: Device meets queue requirements.
-[2025-12-19 09:47:12] [TRACE]: Graphics Family Index: 0
-[2025-12-19 09:47:12] [TRACE]: Present Family Index: 0
-[2025-12-19 09:47:12] [TRACE]: Transfer Family Index: 0
-[2025-12-19 09:47:12] [TRACE]: Compute Family Index: 0
-[2025-12-19 09:47:12] [INFO]: Selected device: 'Intel(R) UHD Graphics'.
-[2025-12-19 09:47:12] [INFO]: GPU type is Integrated.
-[2025-12-19 09:47:12] [INFO]: GPU Driver version: 0.402.1613
-[2025-12-19 09:47:12] [INFO]: Vulkan API version: 1.2.184
-[2025-12-19 09:47:12] [INFO]: Local GPU memory: 5.87 GiB
-[2025-12-19 09:47:12] [INFO]: Physical device selected.
-[2025-12-19 09:47:12] [DEBUG]:  Creating Vulkan swapchain...
-[2025-12-19 09:47:12] [DEBUG]:  Creating Renderpass...
-[2025-12-19 09:47:12] [DEBUG]:  Creating Command Buffers...
-[2025-12-19 09:47:12] [DEBUG]:  Vulkan instance created successfully.
-[2025-12-19 09:47:12] [DEBUG]: ============================================================
+[2025-12-19 10:31:41] [DEBUG]: ============================================================
+[2025-12-19 10:31:41] [DEBUG]:  Vulkan Renderer Backend Initialization
+[2025-12-19 10:31:41] [DEBUG]: ------------------------------------------------------------
+[2025-12-19 10:31:41] [DEBUG]:  Application : My App
+[2025-12-19 10:31:41] [DEBUG]:  Engine      : Sere Engine v1.0.0
+[2025-12-19 10:31:41] [DEBUG]: ============================================================
+[2025-12-19 10:31:41] [DEBUG]:  Required Vulkan extensions:
+[2025-12-19 10:31:41] [DEBUG]:    - VK_KHR_surface
+[2025-12-19 10:31:41] [DEBUG]:    - VK_KHR_win32_surface
+[2025-12-19 10:31:41] [DEBUG]:    - VK_EXT_debug_utils
+[2025-12-19 10:31:41] [DEBUG]:  Validation layers enabled. Enumerating available layers...
+[2025-12-19 10:31:41] [DEBUG]:    Checking for layer: VK_LAYER_KHRONOS_validation
+[2025-12-19 10:31:41] [DEBUG]:    -> Found
+[2025-12-19 10:31:41] [DEBUG]:  All required validation layers are present.
+[2025-12-19 10:31:41] [DEBUG]:  Creating Vulkan instance...
+[2025-12-19 10:31:41] [DEBUG]:  Creating Vulkan debug messenger...
+[2025-12-19 10:31:41] [DEBUG]:  Vulkan debug messenger created.
+[2025-12-19 10:31:41] [DEBUG]:  Creating Vulkan surface...
+[2025-12-19 10:31:41] [DEBUG]:  Creating Vulkan device...
+[2025-12-19 10:31:41] [INFO]: Graphics | Present | Compute | Transfer | Name
+[2025-12-19 10:31:41] [INFO]:      1 |        1 |        1 |        1 | Intel(R) UHD Graphics
+[2025-12-19 10:31:41] [INFO]: Device meets queue requirements.
+[2025-12-19 10:31:41] [TRACE]: Graphics Family Index: 0
+[2025-12-19 10:31:41] [TRACE]: Present Family Index: 0
+[2025-12-19 10:31:41] [TRACE]: Transfer Family Index: 0
+[2025-12-19 10:31:41] [TRACE]: Compute Family Index: 0
+[2025-12-19 10:31:41] [INFO]: Selected device: 'Intel(R) UHD Graphics'.
+[2025-12-19 10:31:41] [INFO]: GPU type is Integrated.
+[2025-12-19 10:31:41] [INFO]: GPU Driver version: 0.402.1613
+[2025-12-19 10:31:41] [INFO]: Vulkan API version: 1.2.184
+[2025-12-19 10:31:41] [INFO]: Local GPU memory: 5.87 GiB
+[2025-12-19 10:31:41] [INFO]: Physical device selected.
+[2025-12-19 10:31:41] [DEBUG]:  Creating Vulkan swapchain...
+[2025-12-19 10:31:41] [DEBUG]:  Creating Renderpass...
+[2025-12-19 10:31:41] [DEBUG]:  Creating Command Buffers...
+[2025-12-19 10:31:41] [DEBUG]: Graphics pipeline created.
+[2025-12-19 10:31:41] [DEBUG]:  Vulkan instance created successfully.
+[2025-12-19 10:31:41] [DEBUG]: ============================================================
 
-[2025-12-19 09:47:12] [INFO]: System memory usage:
- Total allocated: 6551 bytes (0.01 MiB)
+[2025-12-19 10:31:41] [INFO]: System memory usage:
+ Total allocated: 6567 bytes (0.01 MiB)
 
- DYNAMIC_ARRAY :     5.66 KiB (5792 bytes, 88.4%)
+ DYNAMIC_ARRAY :     5.66 KiB (5792 bytes, 88.2%)
  STRING        :     7.00 B (7 bytes, 0.1%)
  PLATFORM      :    72.00 B (72 bytes, 1.1%)
- RENDERER      :   680.00 B (680 bytes, 10.4%)
+ RENDERER      :   696.00 B (696 bytes, 10.6%)
 
-[2025-12-19 09:47:12] [WARNING]: In-flight fence wait failure!
-[2025-12-19 09:47:12] [WARNING]: In-flight fence wait failure!
-[2025-12-19 09:47:15] [DEBUG]:  Shutting down Vulkan Renderer Backend...
-[2025-12-19 09:47:15] [INFO]: ------------------------------------------------------------
-[2025-12-19 09:47:15] [INFO]: Vulkan teardown: starting device and surface cleanup.
-[2025-12-19 09:47:15] [INFO]: Logical device: waiting idle
-[2025-12-19 09:47:15] [INFO]: Logical device: destroying.
-[2025-12-19 09:47:15] [INFO]: Surface: destroying.
-[2025-12-19 09:47:15] [INFO]: Swapchain support: freeing formats array.
-[2025-12-19 09:47:15] [INFO]: Swapchain support: freeing present modes array.
-[2025-12-19 09:47:15] [INFO]: Vulkan teardown: device and surface cleanup complete.
-[2025-12-19 09:47:15] [INFO]: ------------------------------------------------------------
-[2025-12-19 09:47:15] [DEBUG]:  Vulkan Renderer Backend shutdown complete.
+[2025-12-19 10:31:41] [WARNING]: In-flight fence wait failure!
+[2025-12-19 10:31:41] [WARNING]: In-flight fence wait failure!
+[2025-12-19 10:31:42] [DEBUG]:  Shutting down Vulkan Renderer Backend...
+[2025-12-19 10:31:43] [INFO]: ------------------------------------------------------------
+[2025-12-19 10:31:43] [INFO]: Vulkan teardown: starting device and surface cleanup.
+[2025-12-19 10:31:43] [INFO]: Logical device: waiting idle
+[2025-12-19 10:31:43] [INFO]: Logical device: destroying.
+[2025-12-19 10:31:43] [INFO]: Surface: destroying.
+[2025-12-19 10:31:43] [INFO]: Swapchain support: freeing formats array.
+[2025-12-19 10:31:43] [INFO]: Swapchain support: freeing present modes array.
+[2025-12-19 10:31:43] [INFO]: Vulkan teardown: device and surface cleanup complete.
+[2025-12-19 10:31:43] [INFO]: ------------------------------------------------------------
+[2025-12-19 10:31:43] [DEBUG]:  Vulkan Renderer Backend shutdown complete.

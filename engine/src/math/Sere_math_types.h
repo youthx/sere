@@ -27,3 +27,8 @@ typedef union Sere_Mat4
     Sere_Vec4 rows[4];
 #endif
 } Sere_Mat4;
+
+typedef struct Sere_Vertex3d {
+    Sere_Vec3 position;
+} Sere_Vertex3d;
+
