@@ -97,4 +97,6 @@ void Sere_DestroyVulkanObjectShader(Sere_VulkanContext *context, Sere_VulkanObje
 
 void Sere_VulkanObjectShaderUse(Sere_VulkanContext *context, Sere_VulkanObjectShader *shader)
 {
+    u32 image_index = context->image_index;
+    Sere_VulkanGraphicsPipelineBind(&context->graphics_command_buffers[image_index], VK_PIPELINE_BIND_POINT_GRAPHICS, &shader->pipeline);
 }

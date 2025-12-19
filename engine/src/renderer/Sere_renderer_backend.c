@@ -3,6 +3,7 @@
 #include "core/Sere_memory.h"
 
 #include "vulkan/Sere_vulkan_backend.h"
+#include "opengl/Sere_opengl_backend.h"
 
 #include <stdlib.h>
 
@@ -21,7 +22,14 @@ Sere_RendererBackend *Sere_CreateRendererBackend(Sere_RendererBackendType type, 
         
         return backend;
     }
-
+    else if (type == SERE_RENDERER_BACKEND_TYPE_OPENGL) {
+        backend->init = Sere_InitOpenGLRendererBackend;
+        backend->shutdown = Sere_ShutdownOpenGLRendererBackend;
+        backend->resized = SereOpenGLRendererBackendOnResized;
+        backend->begin_frame = SereOpenGLRendererBackendBeginFrame;
+        backend->end_frame = Sere_OpenGLRendererBackendEndFrame;
+    }
+    
     return NULL;
 }
 

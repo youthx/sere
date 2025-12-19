@@ -5,7 +5,7 @@ $ErrorActionPreference = "Stop"
 $assembly = "engine"
 $compilerFlags = @("-g","-shared","-Wvarargs")
 $includeFlags = @("-Isrc", "-II:/Vulkan/Include")
-$linkerFlags  = @("-luser32", "-lvulkan-1", "-LI:/Vulkan/Lib")
+$linkerFlags  = @("-luser32", "-lvulkan-1", "-LI:/Vulkan/Lib", "-lopengl32")
 $defines = @("-D_DEBUG","-DKEXPORT","-D_CRT_SECURE_NO_WARNINGS")
 
 # Collect all C files recursively

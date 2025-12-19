@@ -6,174 +6,175 @@
 
 #include <vulkan/vulkan.h>
 
-#define SERE_VK_CHECK(expr)              \
-    {                                    \
-        SERE_ASSERT(expr == VK_SUCCESS); \
-    }
+#define SERE_VK_CHECK(expr)                                                    \
+  {                                                                            \
+    SERE_ASSERT(expr == VK_SUCCESS);                                           \
+  }
 
-typedef struct Sere_VulkanSwapchainSupportInfo
-{
-    VkSurfaceCapabilitiesKHR capabilities;
-    u32 format_count;
-    VkSurfaceFormatKHR *formats;
-    u32 present_mode_count;
-    VkPresentModeKHR *present_modes;
+typedef struct Sere_VulkanBuffer {
+  u64 total_size;
+  VkBuffer handle;
+  VkBufferUsageFlagBits usage;
+  b8 is_locked;
+  VkDeviceMemory memory;
+  i32 memory_index;
+  u32 memory_property_flags;
+} Sere_VulkanBuffer;
+
+typedef struct Sere_VulkanSwapchainSupportInfo {
+  VkSurfaceCapabilitiesKHR capabilities;
+  u32 format_count;
+  VkSurfaceFormatKHR *formats;
+  u32 present_mode_count;
+  VkPresentModeKHR *present_modes;
 } Sere_VulkanSwapchainSupportInfo;
 
-typedef struct Sere_VulkanDevice
-{
-    VkPhysicalDevice phyiscal_device;
-    VkDevice logical_device;
-    Sere_VulkanSwapchainSupportInfo swapchain_support;
+typedef struct Sere_VulkanDevice {
+  VkPhysicalDevice phyiscal_device;
+  VkDevice logical_device;
+  Sere_VulkanSwapchainSupportInfo swapchain_support;
 
-    i32 graphics_queue_index;
-    i32 present_queue_index;
-    i32 transfer_queue_index;
+  i32 graphics_queue_index;
+  i32 present_queue_index;
+  i32 transfer_queue_index;
 
-    VkQueue graphics_queue;
-    VkQueue present_queue;
-    VkQueue transfer_queue;
+  VkQueue graphics_queue;
+  VkQueue present_queue;
+  VkQueue transfer_queue;
 
-    VkCommandPool graphics_command_pool;
+  VkCommandPool graphics_command_pool;
 
-    VkPhysicalDeviceProperties properties;
-    VkPhysicalDeviceFeatures features;
-    VkPhysicalDeviceMemoryProperties memory;
+  VkPhysicalDeviceProperties properties;
+  VkPhysicalDeviceFeatures features;
+  VkPhysicalDeviceMemoryProperties memory;
 
-    VkFormat depth_format;
+  VkFormat depth_format;
 } Sere_VulkanDevice;
 
-typedef struct Sere_VulkanImage
-{
-    VkImage handle;
-    VkDeviceMemory memory;
-    VkImageView view;
-    u32 width;
-    u32 height;
+typedef struct Sere_VulkanImage {
+  VkImage handle;
+  VkDeviceMemory memory;
+  VkImageView view;
+  u32 width;
+  u32 height;
 } Sere_VulkanImage;
 
-typedef enum Sere_VulkanRenderPassState
-{
-    SERE_RENDERPASS_READY,
-    SERE_RENDERPASS_RECORDING,
-    SERE_RENDERPASS_IN_RENDER_PASS,
-    SERE_RENDERPASS_RECORDING_ENDED,
-    SERE_RENDERPASS_SUBMITTED,
-    SERE_RENDERPASS_NOT_ALLOCATED
+typedef enum Sere_VulkanRenderPassState {
+  SERE_RENDERPASS_READY,
+  SERE_RENDERPASS_RECORDING,
+  SERE_RENDERPASS_IN_RENDER_PASS,
+  SERE_RENDERPASS_RECORDING_ENDED,
+  SERE_RENDERPASS_SUBMITTED,
+  SERE_RENDERPASS_NOT_ALLOCATED
 } Sere_VulkanRenderPassState;
 
-typedef struct Sere_VulkanRenderPass
-{
-    VkRenderPass handle;
-    f32 x, y, w, h;
-    f32 r, g, b, a;
+typedef struct Sere_VulkanRenderPass {
+  VkRenderPass handle;
+  f32 x, y, w, h;
+  f32 r, g, b, a;
 
-    f32 depth;
-    u32 stencil;
+  f32 depth;
+  u32 stencil;
 } Sere_VulkanRenderPass;
 
-typedef struct Sere_VulkanFramebuffer
-{
-    VkFramebuffer handle;
-    u32 attachment_count;
-    VkImageView *attachments;
-    Sere_VulkanRenderPass *renderpass;
+typedef struct Sere_VulkanFramebuffer {
+  VkFramebuffer handle;
+  u32 attachment_count;
+  VkImageView *attachments;
+  Sere_VulkanRenderPass *renderpass;
 } Sere_VulkanFramebuffer;
 
-typedef struct Sere_VulkanSwapchain
-{
-    VkSurfaceFormatKHR image_format;
-    u8 max_frames_in_flight;
+typedef struct Sere_VulkanSwapchain {
+  VkSurfaceFormatKHR image_format;
+  u8 max_frames_in_flight;
 
-    VkSwapchainKHR handle;
-    u32 image_count;
-    VkImage *images;
-    VkImageView *views;
+  VkSwapchainKHR handle;
+  u32 image_count;
+  VkImage *images;
+  VkImageView *views;
 
-    Sere_VulkanImage depth_attachment;
-    Sere_VulkanFramebuffer *framebuffers; // For on-screen rendering
+  Sere_VulkanImage depth_attachment;
+  Sere_VulkanFramebuffer *framebuffers; // For on-screen rendering
 } Sere_VulkanSwapchain;
 
-typedef enum Sere_VulkanCommandBufferState
-{
-    SERE_COMMAND_BUFFER_STATE_READY,
-    SERE_COMMAND_BUFFER_STATE_RECORDING,
-    SERE_COMMAND_BUFFER_STATE_IN_RENDER_PASS,
-    SERE_COMMAND_BUFFER_STATE_RECORDING_ENDED,
-    SERE_COMMAND_BUFFER_STATE_SUBMITTED,
-    SERE_COMMAND_BUFFER_STATE_NOT_ALLOCATED
+typedef enum Sere_VulkanCommandBufferState {
+  SERE_COMMAND_BUFFER_STATE_READY,
+  SERE_COMMAND_BUFFER_STATE_RECORDING,
+  SERE_COMMAND_BUFFER_STATE_IN_RENDER_PASS,
+  SERE_COMMAND_BUFFER_STATE_RECORDING_ENDED,
+  SERE_COMMAND_BUFFER_STATE_SUBMITTED,
+  SERE_COMMAND_BUFFER_STATE_NOT_ALLOCATED
 } Sere_VulkanCommandBufferState;
 
-typedef struct Sere_VulkanCommandBuffer
-{
-    VkCommandBuffer handle;
+typedef struct Sere_VulkanCommandBuffer {
+  VkCommandBuffer handle;
 
-    Sere_VulkanCommandBufferState state;
+  Sere_VulkanCommandBufferState state;
 } Sere_VulkanCommandBuffer;
 
-typedef struct Sere_VulkanFence
-{
-    VkFence handle;
-    b8 is_signaled;
+typedef struct Sere_VulkanFence {
+  VkFence handle;
+  b8 is_signaled;
 } Sere_VulkanFence;
 
-typedef struct Sere_VulkanShaderStage
-{
-    VkShaderModuleCreateInfo create_info;
-    VkShaderModule handle;
-    VkPipelineShaderStageCreateInfo shader_stage_create_info;
+typedef struct Sere_VulkanShaderStage {
+  VkShaderModuleCreateInfo create_info;
+  VkShaderModule handle;
+  VkPipelineShaderStageCreateInfo shader_stage_create_info;
 } Sere_VulkanShaderStage;
 
-typedef struct Sere_VulkanPipeline
-{
-    VkPipeline handle;
-    VkPipelineLayout pipeline_layout;
+typedef struct Sere_VulkanPipeline {
+  VkPipeline handle;
+  VkPipelineLayout pipeline_layout;
 } Sere_VulkanPipeline;
 
 #define SERE_OBJECT_SHADER_STAGE_COUNT 2
 
-typedef struct Sere_VulkanObjectShader
-{
-    Sere_VulkanShaderStage stages[SERE_OBJECT_SHADER_STAGE_COUNT];
-    Sere_VulkanPipeline pipeline;
+typedef struct Sere_VulkanObjectShader {
+  Sere_VulkanShaderStage stages[SERE_OBJECT_SHADER_STAGE_COUNT];
+  Sere_VulkanPipeline pipeline;
 } Sere_VulkanObjectShader;
 
-typedef struct Sere_VulkanContext
-{
-    u32 framebuffer_width;
-    u32 framebuffer_height;
+typedef struct Sere_VulkanContext {
+  u32 framebuffer_width;
+  u32 framebuffer_height;
 
-    u64 framebuffer_size_generation;
-    u64 framebuffer_size_last_generation;
+  u64 framebuffer_size_generation;
+  u64 framebuffer_size_last_generation;
 
-    u32 image_index;
-    u32 current_frame;
+  u32 image_index;
+  u32 current_frame;
 
-    b8 recreating_swapchain;
+  b8 recreating_swapchain;
 
-    Sere_VulkanObjectShader object_shader;
+  Sere_VulkanObjectShader object_shader;
 
-    VkInstance instance;
-    VkAllocationCallbacks *allocator;
-    VkSurfaceKHR surface;
+  VkInstance instance;
+  VkAllocationCallbacks *allocator;
+  VkSurfaceKHR surface;
 
 #if defined(_DEBUG)
-    VkDebugUtilsMessengerEXT debug_messenger;
+  VkDebugUtilsMessengerEXT debug_messenger;
 #endif
 
-    Sere_VulkanCommandBuffer *graphics_command_buffers;
+  Sere_VulkanCommandBuffer *graphics_command_buffers;
 
-    VkSemaphore *image_available_semaphores;
-    VkSemaphore *queue_complete_semaphores;
+  VkSemaphore *image_available_semaphores;
+  VkSemaphore *queue_complete_semaphores;
 
-    u32 in_flight_fence_count;
-    Sere_VulkanFence *in_flight_fences;
-    Sere_VulkanFence **images_in_flight;
+  u32 in_flight_fence_count;
+  Sere_VulkanFence *in_flight_fences;
+  Sere_VulkanFence **images_in_flight;
 
-    Sere_VulkanDevice device;
-    Sere_VulkanSwapchain swapchain;
-    Sere_VulkanRenderPass main_renderpass;
+  Sere_VulkanDevice device;
+  Sere_VulkanSwapchain swapchain;
+  Sere_VulkanRenderPass main_renderpass;
+  Sere_VulkanBuffer object_vertex_buffer;
+  Sere_VulkanBuffer object_index_buffer;
 
-    i32 (*find_memory_index)(u32 type_filter, u32 property_flags);
+  u64 geometry_vertex_offset;
+  u64 geometry_index_offset;
+  
+  i32 (*find_memory_index)(u32 type_filter, u32 property_flags);
 
 } Sere_VulkanContext;
