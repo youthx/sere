@@ -81,6 +81,8 @@ void Sere_VulkanSwapchainPresent(
     {
         SERE_FATAL("Failed to present swapchain image.");
     }
+
+    context->current_frame = (context->current_frame + 1) % swapchain->max_frames_in_flight;
 }
 
 void _Sere_CreateVulkanSwapchain(Sere_VulkanContext *context, u32 width, u32 height, Sere_VulkanSwapchain *swapchain)

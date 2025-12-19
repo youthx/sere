@@ -119,6 +119,16 @@ b8 Sere_CreateVulkanDevice(Sere_VulkanContext *context)
         0,
         &context->device.transfer_queue);
 
+    VkCommandPoolCreateInfo pool_info = {VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO};
+    pool_info.queueFamilyIndex = context->device.graphics_queue_index;
+    pool_info.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
+
+    SERE_VK_CHECK(vkCreateCommandPool(
+        context->device.logical_device,
+        &pool_info,
+        context->allocator,
+        &context->device.graphics_command_pool));
+
     return SERE_TRUE;
 }
 

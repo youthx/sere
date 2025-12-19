@@ -262,6 +262,8 @@ LRESULT CALLBACK Sere_Win32ProcessMessage(HWND hwnd, u32 msg, WPARAM w_param, LP
         return 1;
 
     case WM_CLOSE:
+        Sere_EventContext data = {};
+        Sere_EventFire(SERE_EVENT_QUIT, 0, data);
         DestroyWindow(hwnd);
         return 0;
 

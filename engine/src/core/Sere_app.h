@@ -28,3 +28,5 @@ SERE b8 Sere_RunApp();
 SERE void Sere_Sleep(u64 ms);
 
 SERE void Sere_SetTitle(const char *title);
+
+void Sere_AppGetFramebufferSize(u32 *width, u32 *height);
