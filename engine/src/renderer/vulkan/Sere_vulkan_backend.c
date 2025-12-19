@@ -7,6 +7,7 @@
 #include "Sere_vulkan_command_buffer.h"
 #include "Sere_vulkan_framebuffer.h"
 #include "Sere_vulkan_fence.h"
+#include "Sere_vulkan_utils.h"
 
 #include "core/Sere_logger.h"
 #include "core/Sere_string.h"
@@ -14,6 +15,8 @@
 #include "core/Sere_app.h"
 
 #include "containers/Sere_array.h"
+
+#include "shaders/Sere_vulkan_object_shader.h"
 
 static Sere_VulkanContext context;
 static u32 cached_framebuffer_width = 0;
@@ -31,6 +34,7 @@ void Sere_CreateCommandBuffers(Sere_RendererBackend *backend);
 
 void Sere_RegenerateFramebuffers(Sere_RendererBackend *backend, Sere_VulkanSwapchain *swapchain, Sere_VulkanRenderPass *renderpass);
 
+b8 Sere_RecreateSwapchain(Sere_RendererBackend *backend);
 b8 Sere_InitVulkanRendererBackend(Sere_RendererBackend *backend,
                                   const char *app_name,
                                   struct Sere_PlatformState *plat_state)
@@ -178,7 +182,7 @@ b8 Sere_InitVulkanRendererBackend(Sere_RendererBackend *backend,
         0, 0,
         context.framebuffer_width,
         context.framebuffer_height,
-        0.0f, 0.0f, 0.2f,
+        0.0f, 0.0f, 0.0f,
         1.0f, 1.0f,
         0);
 
@@ -189,21 +193,31 @@ b8 Sere_InitVulkanRendererBackend(Sere_RendererBackend *backend,
     Sere_CreateCommandBuffers(backend);
 
     context.image_available_semaphores = Sere_ReserveArray(VkSemaphore, context.swapchain.max_frames_in_flight);
-    context.queue_complete_semaphores = Sere_ReserveArray(VkSemaphore, context.swapchain.max_frames_in_flight);
+    context.queue_complete_semaphores = Sere_ReserveArray(VkSemaphore, context.swapchain.image_count);
     context.in_flight_fences = Sere_ReserveArray(Sere_VulkanFence, context.swapchain.max_frames_in_flight);
 
-    for (u8 i = 0; i < context.swapchain.max_frames_in_flight; ++i) {
+    for (u8 i = 0; i < context.swapchain.max_frames_in_flight; ++i)
+    {
         VkSemaphoreCreateInfo create_info = {VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO};
-        vkCreateSemaphore(context.device.logical_device, &create_info, context.allocator, &context.image_available_semaphores[i]);
-        vkCreateSemaphore(context.device.logical_device, &create_info, context.allocator, &context.queue_complete_semaphores[i]);
+        SERE_VK_CHECK(vkCreateSemaphore(context.device.logical_device, &create_info, context.allocator, &context.image_available_semaphores[i]));
 
-        context.in_flight_fences[i] = *Sere_CreateVulkanFence(&context, SERE_TRUE);        
+        context.in_flight_fences[i] = *Sere_CreateVulkanFence(&context, SERE_TRUE);
+    }
+
+    for (u32 i = 0; i < context.swapchain.image_count; ++i)
+    {
+        VkSemaphoreCreateInfo ci = {VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO};
+        SERE_VK_CHECK(vkCreateSemaphore(context.device.logical_device, &ci, context.allocator, &context.queue_complete_semaphores[i]));
     }
 
     context.images_in_flight = Sere_ReserveArray(Sere_VulkanFence, context.swapchain.image_count);
-    for (u32 i = 0; i < context.swapchain.image_count; ++i) {
+    for (u32 i = 0; i < context.swapchain.image_count; ++i)
+    {
         context.images_in_flight[i] = 0;
     }
+
+    context.object_shader = *Sere_CreateVulkanObjectShader(&context);
+
 
     SERE_DEBUG(" Vulkan instance created successfully.");
     SERE_DEBUG("============================================================\n");
@@ -220,24 +234,31 @@ void Sere_ShutdownVulkanRendererBackend(Sere_RendererBackend *backend)
     SERE_DEBUG(" Shutting down Vulkan Renderer Backend...");
     vkDeviceWaitIdle(context.device.logical_device);
 
-    for (u8 i = 0; i < context.swapchain.max_frames_in_flight; ++i) {
-        if (context.image_available_semaphores[i]) {
+    Sere_DestroyVulkanObjectShader(&context, &context.object_shader);
+    
+    for (u8 i = 0; i < context.swapchain.max_frames_in_flight; ++i)
+    {
+        if (context.image_available_semaphores[i])
+        {
             vkDestroySemaphore(
                 context.device.logical_device,
                 context.image_available_semaphores[i],
-                context.allocator
-            );
+                context.allocator);
             context.image_available_semaphores[i] = 0;
         }
-        if (context.queue_complete_semaphores[i]) {
+
+        Sere_DestroyVulkanFence(&context, &context.in_flight_fences[i]);
+    }
+    for (u8 i = 0; i < context.swapchain.image_count; i++)
+    {
+        if (context.queue_complete_semaphores[i])
+        {
             vkDestroySemaphore(
                 context.device.logical_device,
                 context.queue_complete_semaphores[i],
-                context.allocator
-            );
+                context.allocator);
             context.queue_complete_semaphores[i] = 0;
         }
-        Sere_DestroyVulkanFence(&context, &context.in_flight_fences[i]);
     }
     Sere_DestroyArray(context.image_available_semaphores);
     context.image_available_semaphores = 0;
@@ -251,7 +272,6 @@ void Sere_ShutdownVulkanRendererBackend(Sere_RendererBackend *backend)
     Sere_DestroyArray(context.images_in_flight);
     context.images_in_flight = 0;
 
-    
     for (u32 i = 0; i < context.swapchain.image_count; ++i)
     {
         if (context.graphics_command_buffers[i].handle)
@@ -298,18 +318,147 @@ void Sere_VulkanRendererBackendOnResized(Sere_RendererBackend *backend,
                                          u16 height)
 {
     SERE_DEBUG(" Window resized: %ux%u", width, height);
-    // TODO: Handle swapchain recreation
+
+    cached_framebuffer_width = width;
+    cached_framebuffer_height = height;
+    context.framebuffer_size_generation++;
 }
 
 b8 Sere_VulkanRendererBackendBeginFrame(Sere_RendererBackend *backend, f32 dt)
 {
-    // SERE_TRACE(" Begin frame (dt=%.4f)", dt);
+    Sere_VulkanDevice *device = &context.device;
+
+    if (context.recreating_swapchain)
+    {
+        VkResult result = vkDeviceWaitIdle(device->logical_device);
+        if (!Sere_VulkanResultIsSuccess(result))
+        {
+            SERE_ERROR("Sere_VulkanRendererBackendBeginFrame vkDeviceWaitIdle (1) failed: '%s'", Sere_VulkanResultString(result, SERE_TRUE));
+            return SERE_FALSE;
+        }
+        return SERE_FALSE;
+    }
+
+    if (context.framebuffer_size_generation != context.framebuffer_size_last_generation)
+    {
+        VkResult result = vkDeviceWaitIdle(device->logical_device);
+        if (!Sere_VulkanResultIsSuccess(result))
+        {
+            SERE_ERROR("Sere_VulkanRendererBackendBeginFrame vkDeviceWaitIdle (2) failed: '%s'", Sere_VulkanResultString(result, SERE_TRUE));
+            return SERE_FALSE;
+        }
+
+        if (!Sere_RecreateSwapchain(backend))
+        {
+            return SERE_FALSE;
+        }
+
+        return SERE_FALSE;
+    }
+
+    if (!Sere_VulkanFenceWait(
+            &context,
+            &context.in_flight_fences[context.current_frame],
+            UINT64_MAX))
+    {
+        SERE_WARN("In-flight fence wait failure!");
+        return SERE_FALSE;
+    }
+
+    if (!Sere_VulkanSwapchainAcquireNextImageIndex(
+            &context,
+            &context.swapchain,
+            UINT64_MAX,
+            context.image_available_semaphores[context.current_frame],
+            0,
+            &context.image_index))
+    {
+        return SERE_FALSE;
+    }
+
+    Sere_VulkanCommandBuffer *command_buffer = &context.graphics_command_buffers[context.image_index];
+    Sere_VulkanCommandBufferReset(command_buffer);
+    Sere_VulkanCommandBufferBegin(command_buffer, SERE_FALSE, SERE_FALSE, SERE_FALSE);
+
+    VkViewport viewport;
+    viewport.x = 0.0f;
+    viewport.y = (f32)context.framebuffer_height;
+    viewport.width = (f32)context.framebuffer_width;
+    viewport.height = -(f32)context.framebuffer_height;
+    viewport.minDepth = 0.0f;
+    viewport.maxDepth = 1.0f;
+
+    VkRect2D scissor;
+    scissor.offset.x = scissor.offset.y = 0;
+    scissor.extent.width = context.framebuffer_width;
+    scissor.extent.height = context.framebuffer_height;
+
+    vkCmdSetViewport(command_buffer->handle, 0, 1, &viewport);
+    vkCmdSetScissor(command_buffer->handle, 0, 1, &scissor);
+
+    context.main_renderpass.w = context.framebuffer_width;
+    context.main_renderpass.h = context.framebuffer_height;
+
+    Sere_VulkanRenderPassBegin(
+        command_buffer,
+        &context.main_renderpass,
+        context.swapchain.framebuffers[context.image_index].handle);
+
     return SERE_TRUE;
 }
 
 b8 Sere_VulkanRendererBackendEndFrame(Sere_RendererBackend *backend, f32 dt)
 {
-    // SERE_TRACE(" End frame (dt=%.4f)", dt);
+    Sere_VulkanCommandBuffer *command_buffer = &context.graphics_command_buffers[context.image_index];
+
+    Sere_VulkanRenderPassEnd(command_buffer, &context.main_renderpass);
+
+    Sere_VulkanCommandBufferEnd(command_buffer);
+
+    if (context.images_in_flight[context.image_index] != VK_NULL_HANDLE)
+    {
+        Sere_VulkanFenceWait(&context, context.images_in_flight[context.image_index], UINT64_MAX);
+    }
+
+    context.images_in_flight[context.image_index] = &context.in_flight_fences[context.current_frame];
+
+    Sere_VulkanFenceReset(&context, &context.in_flight_fences[context.current_frame]);
+
+    VkSubmitInfo submit_info = {VK_STRUCTURE_TYPE_SUBMIT_INFO};
+
+    submit_info.commandBufferCount = 1;
+    submit_info.pCommandBuffers = &command_buffer->handle;
+
+    submit_info.signalSemaphoreCount = 1;
+    submit_info.pSignalSemaphores = &context.queue_complete_semaphores[context.image_index];
+
+    submit_info.waitSemaphoreCount = 1;
+    submit_info.pWaitSemaphores = &context.image_available_semaphores[context.current_frame];
+
+    VkPipelineStageFlags flags[1] = {VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT};
+    submit_info.pWaitDstStageMask = flags;
+
+    VkResult result = vkQueueSubmit(
+        context.device.graphics_queue,
+        1,
+        &submit_info,
+        context.in_flight_fences[context.current_frame].handle);
+    if (result != VK_SUCCESS)
+    {
+        SERE_ERROR("vkQueueSubmit failed with result: %s", Sere_VulkanResultString(result, SERE_TRUE));
+        return SERE_FALSE;
+    }
+
+    Sere_VulkanCommandBufferUpdateSubmitted(command_buffer);
+
+    Sere_VulkanSwapchainPresent(
+        &context,
+        &context.swapchain,
+        context.device.graphics_queue,
+        context.device.present_queue,
+        context.queue_complete_semaphores[context.image_index],
+        context.image_index);
+
     return SERE_TRUE;
 }
 
@@ -373,10 +522,17 @@ void Sere_CreateCommandBuffers(Sere_RendererBackend *backend)
     {
         if (context.graphics_command_buffers[i].handle)
         {
-            Sere_VulkanCommandBufferFree(&context, context.device.graphics_command_pool, &context.graphics_command_buffers[i]);
+            Sere_VulkanCommandBufferFree(
+                &context,
+                context.device.graphics_command_pool,
+                &context.graphics_command_buffers[i]);
         }
         Sere_ZeroMemory(&context.graphics_command_buffers[i], sizeof(Sere_VulkanCommandBuffer));
-        Sere_VulkanCommandBufferAlloc(&context, context.device.graphics_command_pool, SERE_TRUE, &context.graphics_command_buffers[i]);
+        Sere_VulkanCommandBufferAlloc(
+            &context,
+            context.device.graphics_command_pool,
+            SERE_TRUE,
+            &context.graphics_command_buffers[i]);
     }
 }
 
@@ -397,4 +553,85 @@ void Sere_RegenerateFramebuffers(Sere_RendererBackend *backend, Sere_VulkanSwapc
             attachment_count,
             attachments);
     }
+}
+
+b8 Sere_RecreateSwapchain(Sere_RendererBackend *backend)
+{
+    // Avoid re-entry.
+    if (context.recreating_swapchain)
+    {
+        SERE_DEBUG("Sere_RecreateSwapchain called when already recreating. Booting.");
+        return SERE_FALSE;
+    }
+
+    // Guard against zero-sized framebuffer.
+    if (context.framebuffer_width == 0 || context.framebuffer_height == 0)
+    {
+        SERE_DEBUG("Sere_RecreateSwapchain called when window extents are < 1 in dimension. Booting.");
+        return SERE_FALSE;
+    }
+
+    context.recreating_swapchain = SERE_TRUE;
+
+    // Ensure the device is idle before tearing down/recreating.
+    vkDeviceWaitIdle(context.device.logical_device);
+
+    // Clear in-flight tracking for all images.
+    for (u32 i = 0; i < context.swapchain.image_count; ++i)
+    {
+        context.images_in_flight[i] = 0; // pointer sentinel; not VK_NULL_HANDLE
+    }
+
+    // Free command buffers tied to the old swapchain (they reference old framebuffers).
+    for (u32 i = 0; i < context.swapchain.image_count; ++i)
+    {
+        Sere_VulkanCommandBufferFree(
+            &context,
+            context.device.graphics_command_pool,
+            &context.graphics_command_buffers[i]);
+    }
+
+    // Destroy old framebuffers BEFORE touching image views/swapchain.
+    for (u32 i = 0; i < context.swapchain.image_count; ++i)
+    {
+        Sere_DestroyVulkanFramebuffer(&context, &context.swapchain.framebuffers[i]);
+    }
+
+    // Refresh swapchain support/depth format.
+    Sere_VulkanDeviceQuerySwapchainSupport(
+        context.device.phyiscal_device,
+        context.surface,
+        &context.device.swapchain_support);
+    Sere_VulkanDeviceDetectDepthFormat(&context.device);
+
+    // Recreate swapchain with the cached dimensions (destroys/creates image views internally).
+    Sere_RecreateVulkanSwapchain(
+        &context,
+        cached_framebuffer_width,
+        cached_framebuffer_height,
+        &context.swapchain);
+
+    // Sync framebuffer dimensions with the cached sizes.
+    context.framebuffer_width = cached_framebuffer_width;
+    context.framebuffer_height = cached_framebuffer_height;
+    cached_framebuffer_width = 0;
+    cached_framebuffer_height = 0;
+
+    // Update renderpass extents to match the new framebuffer size.
+    context.main_renderpass.x = 0;
+    context.main_renderpass.y = 0;
+    context.main_renderpass.w = context.framebuffer_width;
+    context.main_renderpass.h = context.framebuffer_height;
+
+    // Mark resize generation handled.
+    context.framebuffer_size_last_generation = context.framebuffer_size_generation;
+
+    // Regenerate framebuffers for the new swapchain image views.
+    Sere_RegenerateFramebuffers(backend, &context.swapchain, &context.main_renderpass);
+
+    // Recreate command buffers sized to the new swapchain image count.
+    Sere_CreateCommandBuffers(backend);
+
+    context.recreating_swapchain = SERE_FALSE;
+    return SERE_TRUE;
 }

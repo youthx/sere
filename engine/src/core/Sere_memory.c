@@ -18,6 +18,7 @@ static const char *Sere_MemoryTagStrings[SERE_MEMORY_TAG_MAX_TAGS] = {
     "UNKNOWN      ",
     "STATIC_ARRAY ",
     "DYNAMIC_ARRAY",
+    "ALLOCATOR    ",
     "DICT         ",
     "RING_QUEUE   ",
     "BST          ",

@@ -14,6 +14,19 @@ Sere_VulkanRenderPass *Sere_CreateVulkanRenderPass(
 
     Sere_VulkanRenderPass *out_renderpass = (Sere_VulkanRenderPass *)Sere_Alloc(sizeof(Sere_VulkanRenderPass), SERE_MEMORY_TAG_RENDERER);
 
+    out_renderpass->x = x;
+    out_renderpass->y = y;
+    out_renderpass->w = w;
+    out_renderpass->h = h;
+
+    out_renderpass->r = r;
+    out_renderpass->b = b;
+    out_renderpass->g = g;
+    out_renderpass->a = a;
+
+    out_renderpass->depth = depth;
+    out_renderpass->stencil = stencil;
+
     VkSubpassDescription subpass = {};
     subpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
 

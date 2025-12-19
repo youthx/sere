@@ -35,6 +35,7 @@ b8 Sere_VulkanSwapchainAcquireNextImageIndex(
     VkFence fence,
     u32 *out_image_index)
 {
+    
     VkResult result = vkAcquireNextImageKHR(
         context->device.logical_device,
         swapchain->handle,
@@ -46,6 +47,7 @@ b8 Sere_VulkanSwapchainAcquireNextImageIndex(
     if (result == VK_ERROR_OUT_OF_DATE_KHR)
     {
         Sere_RecreateVulkanSwapchain(context, context->framebuffer_width, context->framebuffer_height, swapchain);
+    
         return SERE_FALSE;
     }
     else if (result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR)
@@ -226,6 +228,7 @@ void _Sere_CreateVulkanSwapchain(Sere_VulkanContext *context, u32 width, u32 hei
 
 void _Sere_DestroyVulkanSwapchain(Sere_VulkanContext *context, Sere_VulkanSwapchain *swapchain)
 {
+    vkDeviceWaitIdle(context->device.logical_device);
     Sere_DestroyVulkanImage(context, &swapchain->depth_attachment);
 
     for (u32 i = 0; i < swapchain->image_count; ++i)

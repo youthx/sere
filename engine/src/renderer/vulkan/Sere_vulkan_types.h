@@ -111,20 +111,47 @@ typedef struct Sere_VulkanCommandBuffer
     Sere_VulkanCommandBufferState state;
 } Sere_VulkanCommandBuffer;
 
-typedef struct Sere_VulkanFence {
+typedef struct Sere_VulkanFence
+{
     VkFence handle;
     b8 is_signaled;
 } Sere_VulkanFence;
+
+typedef struct Sere_VulkanShaderStage
+{
+    VkShaderModuleCreateInfo create_info;
+    VkShaderModule handle;
+    VkPipelineShaderStageCreateInfo shader_stage_create_info;
+} Sere_VulkanShaderStage;
+
+typedef struct Sere_VulkanPipeline
+{
+    VkPipeline handle;
+    VkPipelineLayout pipeline_layout;
+} Sere_VulkanPipeline;
+
+#define SERE_OBJECT_SHADER_STAGE_COUNT 2
+
+typedef struct Sere_VulkanObjectShader
+{
+    Sere_VulkanShaderStage stages[SERE_OBJECT_SHADER_STAGE_COUNT];
+    Sere_VulkanPipeline pipeline;
+} Sere_VulkanObjectShader;
 
 typedef struct Sere_VulkanContext
 {
     u32 framebuffer_width;
     u32 framebuffer_height;
 
+    u64 framebuffer_size_generation;
+    u64 framebuffer_size_last_generation;
+
     u32 image_index;
     u32 current_frame;
 
     b8 recreating_swapchain;
+
+    Sere_VulkanObjectShader object_shader;
 
     VkInstance instance;
     VkAllocationCallbacks *allocator;

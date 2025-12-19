@@ -119,6 +119,14 @@ STATIC_ASSERT(sizeof(f64) == 8, "Expected f64 to be 8 bytes.");
 #endif
 #endif
 
+#ifdef _MSC_VER
+#define SERE_INLINE __forceinline
+#define SERE_NOINLINE __declspec(noinline)
+#else
+#define SERE_INLINE static inline
+#define SERE_NOINLINE
+#endif
+
 #define SERE_CLAMP(value, min, max)             \
     (value <= min) ? min : (value <= max) ? max \
-                                          : value;
+                                          : value

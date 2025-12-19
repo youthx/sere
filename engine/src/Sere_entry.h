@@ -10,7 +10,7 @@
 // ─────────────────────────────────────────────
 // Weak defaults: can be overridden by user/game
 // ─────────────────────────────────────────────
-SERE_RESULT Sere_Entry(Sere_System *out_system) SERE_WEAK;
+SERE_RESULT Sere_Entry(Sere_System *system) SERE_WEAK;
 SERE_RESULT Sere_Update(Sere_System *system) SERE_WEAK;
 SERE_RESULT Sere_Render(Sere_System *system) SERE_WEAK;
 

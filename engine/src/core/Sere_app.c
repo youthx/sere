@@ -104,6 +104,31 @@ void Sere_SetTitle(const char *title)
     Sere_PlatformSetTitle(&app_state.platform, title);
 }
 
+b8 Sere_OnResize(u16 code, void *sender, void *listener_inst, Sere_EventContext data)
+{
+    u16 width = data.data.u16[0];
+    u16 height = data.data.u16[1];
+
+    if (width == 0 || height == 0)
+    {
+        app_state.is_suspended = SERE_TRUE;
+        return SERE_TRUE;
+    }
+    else
+    {
+        if (app_state.is_suspended)
+        {
+            app_state.is_suspended = SERE_FALSE;
+        }
+    }
+
+    app_state.width = width;
+    app_state.height = height;
+    Sere_RendererOnResized(app_state.width, app_state.height);
+
+    return SERE_TRUE;
+}
+
 // -------------------------------------------------------------------------------------------------
 // Application creation
 // -------------------------------------------------------------------------------------------------
@@ -159,6 +184,8 @@ Sere_App *Sere_CreateApp(const char *title, i32 width, i32 height)
         app_state.is_running = SERE_FALSE;
         return NULL;
     }
+
+    Sere_EventRegister(SERE_EVENT_RESIZED, 0, Sere_OnResize);
 
     if (!app_state.system->state)
     {

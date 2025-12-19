@@ -145,6 +145,14 @@ void Sere_DestroyVulkanDevice(Sere_VulkanContext *context)
     context->device.present_queue = VK_NULL_HANDLE;
     context->device.transfer_queue = VK_NULL_HANDLE;
 
+    if (context->device.graphics_command_pool)
+    {
+        vkDestroyCommandPool(
+            context->device.logical_device, 
+            context->device.graphics_command_pool, 
+            context->allocator);
+    }
+    
     /* 1) Destroy device-side objects (swapchain, etc.) BEFORE the device.
        If you have swapchain, image views, framebuffers, pipelines, cmd pools, etc.,
        destroy them here. */

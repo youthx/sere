@@ -278,6 +278,11 @@ LRESULT CALLBACK Sere_Win32ProcessMessage(HWND hwnd, u32 msg, WPARAM w_param, LP
         u32 width = r.right - r.left;
         u32 height = r.bottom - r.top;
 
+        Sere_EventContext data = {};
+        data.data.u16[0] = (u16)width;
+        data.data.u16[1] = (u16)height;
+        Sere_EventFire(SERE_EVENT_RESIZED, 0, data);
+
         // TODO: Fire an event for window resize
     }
     break;
